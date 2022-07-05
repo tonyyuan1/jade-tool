@@ -3,7 +3,7 @@ table.treetable {
   border-collapse: collapse;
   font-size: .8em;
   line-height: 1;
-  margin: 2em 0 1.8em 0;
+  margin: .6em 0 1.8em 0;
   width: 100%;
   background-color: #eee;
 }
@@ -172,7 +172,7 @@ table.treetable tr.expanded.accept td span.indenter a {
 }
 
 #loadIcon {
-  margin: 120px auto;
+  margin: 60px auto;
   height: 120px;
   width: 120px;
   position: relative;

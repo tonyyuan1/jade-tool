@@ -1,155 +1,136 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
-        <meta charset="utf-8" />
-        <title>Jobgroup Test result analysis</title>
-        <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.5.0.min.js"></script>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.2/css/all.css" />
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-        <link rel="stylesheet" href="jquery.treetable.css" />
-        <link rel="stylesheet" href="jquery.treetable.theme.default.css" />
-        <script src="jquery.treetable.js"></script>
-    </head>
-    <body>
-        <div class="container-fluid">
-            <div class="row d-flex">
-                <div class="col-sm-4">
-                    <form id="jadeForm" action="/json" class="form-style-9">
-                        <div class="form-row">
-                            <div class="form-group col">
-                                <label for="firstBid">Previous Build ID</label>
-                                <input type="text" class="form-control border-info" id="firstBid" name="firstBuild" placeholder="ex. 154.1" required />
-                            </div>
-                            <div class="form-group col">
-                                <label for="lastBid">Candidate Build ID</label>
-                                <input type="text" class="form-control border-info" id="lastBid" name="lastBuild" placeholder="ex. 163.1" required />
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col">
-                                <label for="jGroup">Job Group ID</label>
-                                <select id="jGroup" name="groupid" class="form-control border-info">
-                                    <option value="308">Maintenance: SLE 15 SP2</option>
-                                    <option value="143">HA</option>
-                                    <option value="129">Yast</option>
-                                    <option value="116">Kernel Validation</option>
-                                    <option value="265">Migration</option>
-                                    <option value="110">Functional</option>
-                                    <option value="264">Virtualization-Milestone</option>
-                                    <option value="1">Tumbleweed</option>
-                                    <option value="50">leap</option>
-                                    <option>Others...</option>
-                                </select>
-                            </div>
-                            <div class="form-group col">
-                                <label for="vers">Version</label>
-                                <input list="versList" class="form-control border-info" id="vers" name="version" required />
-                                <datalist id="versList">
-                                    <option value="Tumbleweed"> </option>
-                                    <option value="15.3">leap</option>
-                                    <option value="15-SP3"> </option>
-                                    <option value="15-SP2"> </option>
-                                    <option value="15-SP1"> </option>
-                                    <option value="12-SP5"> </option>
-                                </datalist>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div id="radio">
-                                <label for="distri">Distribution:</label>
-                                <input type="radio" name="distri" value="sle" checked /> SLE <input type="radio" name="distri" value="opensuse" /> Opensuse
-                            </div>
-                        </div>
-                        <!--input type="submit" value="Start comparing" /-->
-                        <div class="form-group pt-5 pb-4">
-                            <button type="submit">Start Comparing</button>
-                        </div>
-                    </form>
-                    <div class="help-style-9">
-                        <p>
-                            The tool compares two build test results for a openQA job group and looks for improvements and regressions.&nbsp;It retrieves all failed tests of two builds via OpenQA rest API and compare their flavor, arc,
-                            test, module, machine and test result.<span style="letter-spacing: 0px;">The </span>comparison<span style="letter-spacing: 0px;">&nbsp;result will be shown in a tree table on the web page.</span>
-                        </p>
-                        <ul>
-                            <li>The dark red color: known failure, which means that test module failed in both builds</li>
-                            <li>The red: new failure which means test module passed in previous build but failed in current build (later build). regressions could be triggered.</li>
-                            <li>The green: improvement which means test module passed in current build but failed in previous build.</li>
-                        </ul>
-                        <p>The whole table is actually a union for all failed test of the two builds. dark + red are the all of failed test for current build.&nbsp;dark + green are the all for previous build.</p>
-                        <p>The "Show difference only" checkbox will filter away dark red, which only show improvements and regressions.</p>
-                        <p>Noted: a test module failed in previous build but was not executed or cancelled in in current build. It is also marked green.</p>
-                    </div>
-                </div>
+ <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta charset="utf-8">
+    <title>Jobgroup Test result analysis</title>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.5.0.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.2/css/all.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="jquery.treetable.css" />
+    <link rel="stylesheet" href="jquery.treetable.theme.default.css" >
+    <script src="jquery.treetable.js"></script>
+  </head>
 
-                <div id="div1" class="col-sm-6 d-flex justify-content-center"></div>
-                <!-- container for table  -->
-            </div>
-        </div>
-        <script>
-            var openqatest_url = "https://openqa.suse.de/tests/";
-            $(document).ready(function () {
-                $("#jGroup").on("change", function (e) {
-                    let value = $(this).val();
-                    if (!value || value == "Others...") {
-                        let other = prompt("Please input a build ID:");
-                        if (!other) return false;
-                        $(this).append('<option value="' + other + '" selected="selected">' + other + "</option>");
-                    }
-                });
-                var sle;
-                $.ajax({
-                    url: "/prefered_machines.json",
-                    dataType: "json",
-                    success: function (prefered_machines) {
-                        $("#jadeForm").submit(function (e) {
-                            e.preventDefault();
-                            if ($("#" + sle).length > 0) {
-                                $("#div1").off(`click.${sle}`);
-                                $("#" + sle).remove();
-                            }
-                            $(`<div id="loadIcon">
+  <body>
+
+ <div class="container-fluid">
+	 <div class="row d-flex">	 
+	 <div class="col-sm-4">	 
+<form id="jadeForm" action="/json" class="form-style-9">
+
+  <div class="form-row">
+    <div class="form-group col">
+      <label for="firstBid">Previous Build ID</label>
+      <input type="text" class="form-control border-info" id="firstBid" name="firstBuild" placeholder="ex. 154.1" required>
+    </div>
+    <div class="form-group col">
+      <label for="lastBid">Candidate Build ID</label>
+      <input type="text" class="form-control border-info" id="lastBid" name="lastBuild" placeholder="ex. 163.1" required>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group col">
+      <label for="jGroup">Job Group ID</label>
+      <select id="jGroup" name="groupid" class="form-control border-info">
+        <option value=308>Maintenance: SLE 15 SP2</option>
+        <option value=143>HA</option>
+        <option value=129>Yast</option>
+        <option value=116>Kernel Validation</option>
+        <option value=265>Migration</option>
+        <option value=110>Functional</option>
+        <option value=264>Virtualization-Milestone</option>
+        <option value=1>Tumbleweed</option>
+        <option>Others...</option>
+      </select>
+    </div>
+    <div class="form-group col">
+      <label for="vers">Version</label>
+      <input type="text" class="form-control border-info" id="vers" name="version" placeholder="ex. 15-SP3 or Tumbleweed" required>
+    </div>
+  </div>
+
+ <div class="form-row">
+	<div id="radio">
+		<label for="distri">Distribution:</label>
+		<input type="radio" name="distri" value="sle" checked> SLE
+		<input type="radio" name="distri" value="opensuse"> Opensuse
+	</div>
+ </div>
+  <!--input type="submit" value="Start comparing" /-->
+  <div class="form-group pt-5 pb-4">
+  <button type="submit">Start Comparing</button>
+  </div>
+</form>
+</div>
+
+
+<div id="div1" class="col-sm-6 d-flex align-self-center justify-content-center"></div>  <!-- container for table  -->
+</div>
+	  
+<script>
+var openqatest_url = "https://openqa.suse.de/tests/";
+$( document ).ready(function(){
+$('#jGroup').on('change', function (e) {
+
+       let value = $(this).val();
+        if (!value || value == 'Others...') {
+           let other = prompt( "Please input a build ID:" );
+           if (!other) return false;
+		$(this).append('<option value="'
+                             + other
+                             + '" selected="selected">'
+                             + other
+                             + '</option>');
+        }
+});
+
+var sle;
+
+            $.ajax({url: "/machines.json", dataType: "json", success: function(prefered_machines){
+
+$("#jadeForm").submit(function(e) {
+e.preventDefault();
+//$("#div1").empty().addClass("align-self-center justify-content-center");
+		if ($("#"+sle).length > 0) { $("#div1").off(`click.${sle}`); $("#"+sle).remove();}
+$(`<div id="loadIcon">
       <div></div>
       <div></div>
       <div></div>
       <div></div>
-    </div>`).appendTo("#div1"); // appending spinner
-                            let thisform = $(this).serializeArray();
-                            console.log($(this).serializeArray());
+    </div>`).appendTo("#div1");	// appending spinner	
+	let thisform = $(this).serializeArray();
+console.log( $( this ).serializeArray() );
 
-                            var form_info = {};
-                            $.each(thisform, function () {
-                                form_info[this.name] = this.value;
-                            });
-                            if (form_info["distri"] == "opensuse") {
-                                openqatest_url = "https://openqa.opensuse.org/tests/";
-                            }
-                            // let group_name = $("#jGroup").val();
-                            let caption_Str = `${form_info["distri"]}-${form_info["version"]} groupid ${form_info["groupid"]}: build${form_info["lastBuild"]} vs build${form_info["firstBuild"]}`;
-                            let qStr = $(this).serialize();
+	var form_info = {};
+$.each(thisform, function() {
+    form_info[this.name] = this.value;
+});
 
-                            console.log(qStr);
-                            // sle="table" + group_name;
-                            sle = "table" + form_info["groupid"];
-                            if ($("#" + sle).length > 0) {
-                                return false;
-                            }
 
-                            $.ajax({
-                                url: "/json",
-                                data: qStr,
-                                dataType: "json",
-                                error: function (err) {
-                                    $("#loadIcon").remove();
-                                    //		alert("Build" + err.responseText + ": " + err.status + " " + err.statusText);
-                                    alert("Build" + err.responseText);
-                                },
+		if (form_info["distri"] == "opensuse") {openqatest_url = "https://openqa.opensuse.org/tests/";}
+//		if ($("input[type='radio'][name='distri']:checked").val() == "opensuse") {openqatest_url = "https://openqa.opensuse.org/tests/";}
+// let group_name = $("#jGroup").val();
+	let caption_Str = `${form_info["distri"]}-${form_info["version"]} groupid ${form_info["groupid"]}: build${form_info["lastBuild"]} vs build${form_info["firstBuild"]}`;
+ let qStr = $(this).serialize();	
+		
+console.log(qStr);
+// sle="table" + group_name;
+ sle="table" + form_info["groupid"];
+if ($("#" + sle).length > 0) {return false; }	
 
-                                success: function (result) {
-                                    $("#loadIcon").remove();
-                                    $(`<table id=${sle}>
-<caption>
+
+            $.ajax({url: "/json", data: qStr, dataType: "json", 
+	    error: function(err){
+                       $("#loadIcon").remove();
+			alert("Build" + err.responseText + ": " + err.status + " " + err.statusText);    
+		    }, 
+
+	    success: function(result){
+                       $("#loadIcon").remove();
+$(`<table id=${sle}>
+   <caption>
        <div>
 	${caption_Str}
        </div>
@@ -163,137 +144,119 @@
   <input class="form-check-input" type="checkbox" id="nodarkred" />
   <label class="form-check-label" for="nodarkred">Show difference only</label>
 </div>    
+
 </div>
-</caption>
+  </caption>
   <thead>
     <tr><th>Test</th></tr>
   </thead>
   <tbody> </tbody> 
- </table>`).appendTo("#div1");
+ </table>`
+ ).appendTo("#div1");
 
-                                    let arc = [...result[0]["jobs"], ...result[1]["jobs"]]
-                                        .map(function (job) {
-                                            return job.settings.ARCH;
-                                        })
-                                        .sort();
-                                    let uniqArc = [...new Set(arc)];
-                                    for (const a of uniqArc) {
-                                        $("<th>" + a + "</th>").appendTo(`#${sle} thead tr`);
-                                    } //create arc heading
 
-                                    let col = {};
-                                    let wdth = 0;
-                                    uniqArc.forEach(function (a, i) {
-                                        col[a] = i + 1;
-                                        wdth++;
-                                    });
+		let arc  = [...result[0]["jobs"], ...result[1]["jobs"]].map(function(job){return job.settings.ARCH}).sort();	  
+		let uniqArc = [...new Set(arc)]; 
+		 for (const a of uniqArc) {
+                 $("<th>" + a + "</th>").appendTo(`#${sle} thead tr`); } //create arc heading
+                 
+                let col ={};
+		let wdth = 0;
+		uniqArc.forEach(function(a, i){col[a] = i+1; wdth++});
+		
+		createTbody(result[0].jobs, true);
+		createTbody(result[1].jobs, false);
+	   // $("#div1").html(JSON.stringify(result));
+function createTbody(jobs, preRun) {
+for (job of jobs) {
+          let fRow = $(`#${sle} tr[data-tt-id="${job.settings.FLAVOR}"]`);		
+	  if (!(fRow.length > 0)) {
+	           fRow = $(`<tr data-tt-id="${job.settings.FLAVOR}"><td><span class='folder-open'>${job.settings.FLAVOR}</span></td>${"<td></td>".repeat(wdth)}</tr>`);
+	       	fRow.appendTo(`#${sle} tbody`);
+           }	
+	    //if (job.settings.MACHINE != job.settings.ARCH && ["64bit", "ppc64le", "s390x-kvm-sle12", "aarch64"].indexOf(job.settings.MACHINE) === -1) {job.test = job.test + "@" + job.settings.MACHINE;}
+	    if (typeof prefered_machines[job.group] != "undefined" && job.settings.MACHINE != job.settings.ARCH && job.settings.MACHINE != prefered_machines[job.group][job.settings.ARCH]) {job.test = job.test + "@" + job.settings.MACHINE;}
+           let tRow = $(`#${sle} tr[data-tt-id="${job.settings.FLAVOR}_${job.test}"]`);
+                 if (!(tRow.length > 0)) { 
+				 tRow=$(`<tr data-tt-id="${job.settings.FLAVOR}_${job.test}" data-tt-parent-id=${job.settings.FLAVOR}><td><span class='folder-close'>${job.test}</span></td>${"<td></td>".repeat(wdth)}`)
+				 let tSiblings = $(`#${sle} tr[data-tt-parent-id^="${job.settings.FLAVOR}"]`);
+				 tSiblings.length > 0 ? tSiblings.last().after(tRow) : fRow.after(tRow);
+			 }
+	  for (m of job.modules) {
+	       let mRow;
+	     	let mResult;
+	     if (m.result =="failed"){
+	         mRow = $(`#${sle} tr[data-tt-id="${job.settings.FLAVOR}_${job.test}_${m.name}"]`);
+	         if (mRow.length > 0) { //module exists
+	            let mStatus = mRow.children().eq(col[job.settings.ARCH]).find("a");
+	            if (mStatus.length > 0) {mStatus.attr("href", `${openqatest_url}${job.id}#step/${m.name}/1`).find("i.status").removeClass("result_passed").addClass("result_failed known_failed").attr("title", "Both failed"); 
+		          } else {
+	             if (preRun) { 
+			 mResult= $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_passed" title="Passed but failed previously"></i></a></span>`);
+	             }else {	         
+	                 mResult= $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_failed" title="failed but passed previously"></i></a></span>`);
+			  }    
+	       	     mRow.children().eq(col[job.settings.ARCH]).append(mResult);
+	      
+			  }} else { 
+	      
+	             mRow = $(`<tr data-tt-id="${job.settings.FLAVOR}_${job.test}_${m.name}" data-tt-parent-id="${job.settings.FLAVOR}_${job.test}"><td><span class='file lastfile'><i></i>${m.name}</span></td>${"<td></td>".repeat(wdth)}`);
+		     let mSiblings = $(`#${sle} tr[data-tt-parent-id="${job.settings.FLAVOR}_${job.test}"]`);
+				  if (mSiblings.length > 0) { 
+					  mSiblings.last().find("span.lastfile").removeClass('lastfile');
+					  mSiblings.last().after(mRow);
+				  } else { tRow.after(mRow);}
+	             if (preRun) { 
+	                 mResult= $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_passed" title="Passed but failed previously"></i></a></span>`);
+	             }else {	         
+	                 mResult= $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_failed" title="failed but passed previously"></i></a></span>`);
+	             }  //preRun
+	       	     mRow.children().eq(col[job.settings.ARCH]).append(mResult);
+	     }  //mRow.length
+	  }		 
+}}} //	createTbody
+			    
+$("#" + sle).treetable({ expandable: true, indent: 16 });			
+  
 
-                                    createTbody(result[0].jobs, true);
-                                    createTbody(result[1].jobs, false);
-                                    // Create two tbodies one on the top of the other ;
-                                    function createTbody(jobs, preRun) {
-                                        for (job of jobs) {
-                                            let fRow = $(`#${sle} tr[data-tt-id="${job.settings.FLAVOR}"]`);
-                                            if (!(fRow.length > 0)) {
-                                                fRow = $(`<tr data-tt-id="${job.settings.FLAVOR}"><td><span class='folder-open'>${job.settings.FLAVOR}</span></td>${"<td></td>".repeat(wdth)}</tr>`);
-                                                fRow.appendTo(`#${sle} tbody`);
-                                            }
-                                            //if (job.settings.MACHINE != job.settings.ARCH && ["64bit", "ppc64le", "s390x-kvm-sle12", "aarch64"].indexOf(job.settings.MACHINE) === -1) {job.test = job.test + "@" + job.settings.MACHINE;}
-                                            if (typeof prefered_machines[job.group] != "undefined" && job.settings.MACHINE != job.settings.ARCH && job.settings.MACHINE != prefered_machines[job.group][job.settings.ARCH]) {
-                                                job.test = job.test + "@" + job.settings.MACHINE;
-                                            }
-                                            let tRow = $(`#${sle} tr[data-tt-id="${job.settings.FLAVOR}_${job.test}"]`);
-                                            if (!(tRow.length > 0)) {
-                                                tRow = $(`<tr data-tt-id="${job.settings.FLAVOR}_${job.test}" data-tt-parent-id=${job.settings.FLAVOR}><td><span class='folder-close'>${job.test}</span></td>${"<td></td>".repeat(wdth)}`);
-                                                let tSiblings = $(`#${sle} tr[data-tt-parent-id^="${job.settings.FLAVOR}"]`);
-                                                tSiblings.length > 0 ? tSiblings.last().after(tRow) : fRow.after(tRow);
-                                            }
-                                            for (m of job.modules) {
-                                                let mRow;
-                                                let mResult;
-                                                if (m.result == "failed") {
-                                                    mRow = $(`#${sle} tr[data-tt-id="${job.settings.FLAVOR}_${job.test}_${m.name}"]`);
-                                                    if (mRow.length > 0) {
-                                                        //module exists
-                                                        let mStatus = mRow.children().eq(col[job.settings.ARCH]).find("a");
-                                                        if (mStatus.length > 0) {
-                                                            mStatus
-                                                                .attr("href", `${openqatest_url}${job.id}#step/${m.name}/1`)
-                                                                .find("i.status")
-                                                                .removeClass("result_passed")
-                                                                .addClass("result_failed known_failed")
-                                                                .attr("title", "Both failed");
-                                                        } else {
-                                                            if (preRun) {
-                                                                mResult = $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_passed" title="Passed but failed previously"></i></a></span>`);
-                                                            } else {
-                                                                mResult = $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_failed" title="failed but passed previously"></i></a></span>`);
-                                                            }
-                                                            mRow.children().eq(col[job.settings.ARCH]).append(mResult);
-                                                        }
-                                                    } else {
-                                                        mRow = $(
-                                                            `<tr data-tt-id="${job.settings.FLAVOR}_${job.test}_${m.name}" data-tt-parent-id="${job.settings.FLAVOR}_${job.test}"><td><span class='file lastfile'><i></i>${
-                                                                m.name
-                                                            }</span></td>${"<td></td>".repeat(wdth)}`
-                                                        );
-                                                        let mSiblings = $(`#${sle} tr[data-tt-parent-id="${job.settings.FLAVOR}_${job.test}"]`);
-                                                        if (mSiblings.length > 0) {
-                                                            mSiblings.last().find("span.lastfile").removeClass("lastfile");
-                                                            mSiblings.last().after(mRow);
-                                                        } else {
-                                                            tRow.after(mRow);
-                                                        }
-                                                        if (preRun) {
-                                                            mResult = $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_passed" title="Passed but failed previously"></i></a></span>`);
-                                                        } else {
-                                                            mResult = $(`<span><a href=${openqatest_url}${job.id}#step/${m.name}/1><i class="status fa fa-circle result_failed" title="failed but passed previously"></i></a></span>`);
-                                                        } //preRun
-                                                        mRow.children().eq(col[job.settings.ARCH]).append(mResult);
-                                                    } //mRow.length
-                                                }
-                                            }
-                                        }
-                                    } //	createTbody
+$("#nodarkred").on('change', function() {
+    if ($(this).is(':checked')) {
+        switchStatus = $(this).is(':checked');
+		$(`#${sle} tbody tr`).addClass("hide");
+		let non_Darkreds =$( `#${sle} tbody tr:has("a i:not(.known_failed)")`).removeClass("hide");	    
+		    non_Darkreds.each(function(i, rw) {
+				$(rw).find("span").has("a i.known_failed").addClass("hide");
+				  let pRow =  $(`tr[data-tt-id="${$(rw).attr('data-tt-parent-id')}"`);
+				  if (pRow.hasClass("hide")) {pRow.removeClass("hide");}    
+				  let fRow =  $(`tr[data-tt-id="${pRow.attr('data-tt-parent-id')}"`);
+				  if (fRow.hasClass("hide")) {fRow.removeClass("hide");}    
+			    });   
+    }
+    else {
+		    $(`#${sle} tbody tr.hide`).removeClass("hide");	
+		    $(`#${sle} tbody tr td span.hide`).removeClass("hide");
+    }
+});
 
-                                    $("#" + sle).treetable({ expandable: true, indent: 16 });
+$("#expandAll1").on('change', function() {
+    if ($(this).is(':checked')) {
+                                jQuery("#" + sle).treetable('expandAll');
+                        } else {
+                                 jQuery("#" + sle).treetable('collapseAll');
+                                }
+                });
 
-                                    $("#nodarkred").on("change", function () {
-                                        if ($(this).is(":checked")) {
-                                            switchStatus = $(this).is(":checked");
-                                            $(`#${sle} tbody tr`).addClass("hide");
-                                            let non_Darkreds = $(`#${sle} tbody tr:has("a i:not(.known_failed)")`).removeClass("hide");
-                                            non_Darkreds.each(function (i, rw) {
-                                                $(rw).find("span").has("a i.known_failed").addClass("hide");
-                                                let pRow = $(`tr[data-tt-id="${$(rw).attr("data-tt-parent-id")}"`);
-                                                if (pRow.hasClass("hide")) {
-                                                    pRow.removeClass("hide");
-                                                }
-                                                let fRow = $(`tr[data-tt-id="${pRow.attr("data-tt-parent-id")}"`);
-                                                if (fRow.hasClass("hide")) {
-                                                    fRow.removeClass("hide");
-                                                }
-                                            });
-                                        } else {
-                                            $(`#${sle} tbody tr.hide`).removeClass("hide");
-                                            $(`#${sle} tbody tr td span.hide`).removeClass("hide");
-                                        }
-                                    });
+} // ajax success
+	}); //ajax
 
-                                    $("#expandAll1").on("change", function () {
-                                        if ($(this).is(":checked")) {
-                                            jQuery("#" + sle).treetable("expandAll");
-                                        } else {
-                                            jQuery("#" + sle).treetable("collapseAll");
-                                        }
-                                    });
-                                }, // ajax success
-                            }); //ajax
-                        }); //submit
-                    },
-                }); // prefered machines
-            }); //document ready
-        </script>
-    </body>
+});  //submit
+
+}}); // prefered machines
+}); //document ready
+
+
+</script>
+  </body>
 </html>
+
 

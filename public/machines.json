@@ -1,0 +1,115 @@
+{
+  "openSUSE Tumbleweed PowerPC": {
+    "ppc64": "ppc64",
+    "ppc64le": "ppc64le"
+  },
+  "openSUSE Tumbleweed": {
+    "i586": "pentium3",
+    "i686": "32bit",
+    "x86_64": "64bit"
+  },
+  "openSUSE Tumbleweed Kernel": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "x86_64": "64bit"
+  },
+  "openSUSE Tumbleweed AArch64": {
+    "aarch64": "aarch64",
+    "arm": "aarch32-HD24G"
+  },
+  "openSUSE Tumbleweed s390x": {
+    "s390x": "s390x-zVM-vswitch-l2"
+  },
+  "KernelX": {
+    "aarch64": "aarch64-virtio",
+    "ppc64le": "ppc64le-virtio",
+    "s390x": "s390x-kvm-sle15",
+    "x86_64": "64bit"
+  },
+  "File Systems": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le-spvm",
+    "s390x": "s390x-kvm-sle15",
+    "x86_64": "64bit-smp"
+  },
+  "Virtualization-Milestone": {
+    "aarch64": "virt-arm-64bit-ipmi-machine",
+    "s390x": "virt-s390x-kvm-sle15sp3",
+    "x86_64": "64bit-ipmi"
+  },
+  "Kernel Validation": {
+    "aarch64": "aarch64-virtio",
+    "ppc64le": "ppc64le-virtio",
+    "s390x": "s390x-kvm-sle15",
+    "x86_64": "64bit"
+  },
+  "Migration: Regression": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le-2g",
+    "s390x": "s390x-kvm-sle12",
+    "x86_64": "64bit"
+  },
+  "HA": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "s390x": "s390x-kvm-sle12",
+    "x86_64": "64bit"
+  },
+  "Network": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "x86_64": "64bit"
+  },
+  "Migration: HPC Milestone": {
+    "aarch64": "aarch64",
+    "x86_64": "64bit_cirrus"
+  },
+  "Desktop Applications": {
+    "x86_64": "64bit-virtio-vga"
+  },
+  "Migration: Milestone": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "s390x": "s390x-kvm-sle15",
+    "x86_64": "64bit"
+  },
+  "Functional": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "s390x": "s390x-kvm-sle12",
+    "x86_64": "64bit"
+  },
+  "SLES for SAP Applications": {
+    "ppc64le": "ppc64le-2g",
+    "x86_64": "64bit-2gbram"
+  },
+  "Security": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le-hmc-single-disk",
+    "s390x": "s390x-kvm-sle12",
+    "x86_64": "64bit"
+  },
+  "YaST": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "s390x": "s390x-kvm-sle12",
+    "x86_64": "64bit"
+  },
+  "Migration: HPC": {
+    "aarch64": "aarch64",
+    "x86_64": "64bit_cirrus"
+  },
+  "Virtualization-Acceptance": {
+    "x86_64": "64bit-ipmi-large-mem"
+  },
+  "Migration": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "s390x": "s390x-kvm-sle15",
+    "x86_64": "64bit_cirrus"
+  },
+  "HPC": {
+    "aarch64": "aarch64",
+    "x86_64": "64bit"
+  }
+}
