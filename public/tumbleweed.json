@@ -1,0 +1,31 @@
+{
+  "openSUSE Tumbleweed PowerPC": {
+    "ppc64": "ppc64",
+    "ppc64le": "ppc64le"
+  }
+}
+{
+  "openSUSE Tumbleweed": {
+    "i586": "pentium3",
+    "i686": "32bit",
+    "x86_64": "64bit"
+  }
+}
+{
+  "openSUSE Tumbleweed Kernel": {
+    "aarch64": "aarch64",
+    "ppc64le": "ppc64le",
+    "x86_64": "64bit"
+  }
+}
+{
+  "openSUSE Tumbleweed AArch64": {
+    "aarch64": "aarch64",
+    "arm": "aarch32-HD24G"
+  }
+}
+{
+  "openSUSE Tumbleweed s390x": {
+    "s390x": "s390x-zVM-vswitch-l2"
+  }
+}
