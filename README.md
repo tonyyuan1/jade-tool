@@ -4,7 +4,7 @@ The tool is written in javascript and executed with nodejs. It compares two buil
 Required modules:
 request-promise, express, debug
 
-# i.e. npm install express
+ i.e. npm install express
 
 How to use
 
